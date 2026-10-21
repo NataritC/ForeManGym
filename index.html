@@ -1186,7 +1186,6 @@ function openPay(){
         <p class="hint" style="text-align:center">Screenshot this, then open your bank app and scan it from your photos. The amount fills in automatically.</p>`:""}
       <div class="bank">
         ${bank.bankName?`<div class="bank-row"><div><span class="label">Bank</span><b>${esc(bank.bankName)}</b></div></div>`:""}
-        ${bank.accountName?`<div class="bank-row"><div><span class="label">Account name</span><b>${esc(bank.accountName)}</b></div></div>`:""}
         ${bank.account?`<div class="bank-row"><div><span class="label">Account number</span><b class="mono">${esc(bank.account)}</b></div><button class="copy" type="button" data-copy="${esc(bank.account.replace(/\D/g,""))}">Copy</button></div>`:""}
         ${bank.promptpay?`<div class="bank-row"><div><span class="label">PromptPay</span><b class="mono">${esc(bank.promptpay)}</b></div><button class="copy" type="button" data-copy="${esc(bank.promptpay.replace(/\D/g,""))}">Copy</button></div>`:""}
       </div>
@@ -1578,7 +1577,6 @@ function openSettings(){
         <div class="field"><span class="label">Treasurer · confirms payments</span>
           <div class="select">${PEOPLE.map(p=>`<button type="button" data-tr="${p}" aria-pressed="${tr===p}">${mg(p,"sm")}${p}</button>`).join("")}</div></div>
         <div class="field"><label class="label" for="bName">Bank</label><input id="bName" value="${esc(bk.bankName||"")}" placeholder="e.g. Kasikorn (KBank)"></div>
-        <div class="field"><label class="label" for="bAcctName">Account name</label><input id="bAcctName" value="${esc(bk.accountName||"")}" autocapitalize="words"></div>
         <div class="field"><label class="label" for="bAcct">Account number</label><input id="bAcct" inputmode="numeric" value="${esc(bk.account||"")}" placeholder="xxx-x-xxxxx-x"></div>
         <div class="field"><label class="label" for="bPP">PromptPay number</label><input id="bPP" inputmode="numeric" value="${esc(bk.promptpay||"")}" placeholder="08x-xxx-xxxx or 13-digit ID"></div>
         <div class="err" id="bErr" hidden></div>
@@ -1612,7 +1610,7 @@ function openSettings(){
       try{await db.doc("payments/"+who+"_"+now).set({user:who,amount:amt,ts:now,status:"confirmed",method:"cash",decidedBy:me,decidedAt:now});toast(`${who}'s ${baht(amt)} added to the pot`);close()}catch(e){toast("Couldn't save. Try again.")}});
     bg.querySelectorAll("[data-tr]").forEach(x=>x.onclick=()=>{tr=x.dataset.tr;bg.querySelectorAll("[data-tr]").forEach(y=>y.setAttribute("aria-pressed",y.dataset.tr===tr))});
     const sb=bg.querySelector("#saveBank");if(sb)sb.onclick=async()=>{const e=bg.querySelector("#bErr");e.hidden=true;
-      const bank={bankName:bg.querySelector("#bName").value.trim(),accountName:bg.querySelector("#bAcctName").value.trim(),account:bg.querySelector("#bAcct").value.trim(),promptpay:bg.querySelector("#bPP").value.trim()};
+      const bank={bankName:bg.querySelector("#bName").value.trim(),account:bg.querySelector("#bAcct").value.trim(),promptpay:bg.querySelector("#bPP").value.trim()};
       const ppd=bank.promptpay.replace(/\D/g,"");
       if(!bank.account&&!bank.promptpay){e.textContent="Add an account number or a PromptPay number.";e.hidden=false;return}
       if(bank.promptpay&&!(ppd.length===10||ppd.length===13||ppd.length===15)){e.textContent="PromptPay should be a 10-digit phone number or a 13-digit ID number.";e.hidden=false;return}
