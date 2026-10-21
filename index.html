@@ -699,7 +699,8 @@ let toastT;function toast(m){const t=document.getElementById("toast");t.textCont
 async function hash(name,pw){const s="lockedin:"+name+":"+pw;
   try{const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(s));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("")}
   catch(e){let h=5381;for(const c of s)h=((h*33)^c.charCodeAt(0))>>>0;return "f"+h.toString(16)}}
-const mg=(p,cls="")=>`<span class="mono-g ${cls}" data-p="${p}">${p[0]}</span>`;
+const ini=p=>p==="Ikkew"?"K":p[0];
+const mg=(p,cls="")=>`<span class="mono-g ${cls}" data-p="${p}">${ini(p)}</span>`;
 
 /* ---------- rules ---------- */
 function fees(){return {...DEFAULT_FEES,...(settings.fees||{})}}
@@ -1090,7 +1091,7 @@ function profileHTML(){
   const due=Math.max(0,m.owed-m.pending);
   return `
   ${pageHero({variant:"profile",eyebrow:`Member since ${accounts[me]&&accounts[me].created?new Date(accounts[me].created).toLocaleDateString("en-GB",{month:"short",year:"numeric"}):"this season"}`,title:me,
-    sub:m.status==="ok"?"Duty done this week.":`${m.nw} weights + ${m.nc} cardio to go this week.`,right:`<span class="avatar" data-p="${me}">${me[0]}</span>`,
+    sub:m.status==="ok"?"Duty done this week.":`${m.nw} weights + ${m.nc} cardio to go this week.`,right:`<span class="avatar" data-p="${me}">${ini(me)}</span>`,
     stats:[[m.streak,"Day streak","cyan"],[visitDays().length,"Gym visits","peri"],[m.owed?baht(m.owed):"฿0","Owed","teal"]]})}
   <section class="card">
     <div class="card-h"><h2>Body stats</h2><span class="label">Sets your cardio target</span></div>
