@@ -22,3 +22,6 @@ Hosted on Netlify (auto-deploys from this repo, publish dir = repo root, no buil
 ## Style
 Matte black + cool aurora (cyan #7FD4E6, ice #A9C7D8, periwinkle #9DA4F2, teal #62C3B0). Fonts: Unbounded (display), Manrope (body), JetBrains Mono (numbers).
 Member colors: Boss ice, Ice cyan, Ikkew teal, Ong periwinkle. Keep 44pt tap targets and safe-area padding.
+
+## Workflow
+Owner wants every change live right away: after editing, commit and push to `main` (Netlify auto-deploys) as well as the working branch. No zip/manual uploads.
