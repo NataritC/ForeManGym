@@ -319,6 +319,7 @@ main>*{min-width:0}
 .box{background:var(--card);border:1px solid var(--edge);border-radius:var(--r);padding:16px;display:grid;gap:14px}
 .box h3{font-weight:700;font-size:12px;letter-spacing:.12em;text-transform:uppercase}
 .payrow{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;font-size:15px}
+.owes{display:grid;gap:10px;margin-top:16px}.owes .due{color:var(--text);font-weight:600}.owes .ok{color:var(--sub)}.owes small{color:var(--sub);font-size:12px}
 .payrow button{min-height:44px;padding:0 14px;border-radius:999px;background:var(--ice-dim);color:var(--ice);font-size:12px;font-weight:600}
 .verdict{display:flex;gap:12px;align-items:flex-start;border-radius:var(--r-sm);padding:14px;background:var(--card);border:1px solid var(--edge)}
 .verdict:not(:has(.spin)){display:grid;gap:2px}
@@ -1117,6 +1118,7 @@ function profileHTML(){
     <div class="pot"><div class="total"><span class="label">Total</span><b class="mono">${baht(charged)}</b></div>
       <div><span class="label">Paid</span><b class="mono">${baht(paid)}</b></div>
       <div><span class="label">Unpaid</span><b class="mono">${baht(out)}</b></div></div>
+    <div class="owes"><span class="label">Each person pays</span>${((b=board())=>PEOPLE.map(p=>b.find(s=>s.name===p)))().map(s=>`<div class="payrow">${mg(s.name,"sm")}<span>${s.name}</span><span class="mono ${s.owed?"due":"ok"}">${s.owed?baht(s.owed):"Paid up"}${s.pending?` <small>· ${baht(s.pending)} pending</small>`:""}</span></div>`).join("")}</div>
     <p class="rule">Charged when each week closes on Sunday: <b>1st miss ${baht(f.first)}</b>, <b>2nd +${baht(f.second)}</b>, <b>each after +${baht(f.after)}</b>. Any missed session counts. Sessions count once 2 friends approve them, or after 48h if nobody objects.</p>
     ${payments.length?`<div class="paylog">${payments.slice(0,12).map(x=>`<div class="pl">${mg(x.user,"sm")}
       <div><div>${esc(x.user)} · <span class="mono">${baht(x.amount)}</span></div><div class="when">${fmtTime(x.ts)}${x.method==="cash"?" · cash":""}</div></div>
