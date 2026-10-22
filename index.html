@@ -686,8 +686,10 @@ const photoCache={};
 const pad=n=>String(n).padStart(2,"0");
 const dkey=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
 const parseKey=k=>{const [y,m,d]=k.split("-").map(Number);return new Date(y,m-1,d)};
+/* A gym day runs 6am to 6am: before 6am still counts as the day before. */
+const DAY_START=6,gday=()=>new Date(Date.now()-DAY_START*36e5);
 const addDays=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x};
-function weekStart(d=new Date()){const x=new Date(d.getFullYear(),d.getMonth(),d.getDate());x.setDate(x.getDate()-((x.getDay()+6)%7));return x}
+function weekStart(d=gday()){const x=new Date(d.getFullYear(),d.getMonth(),d.getDate());x.setDate(x.getDate()-((x.getDay()+6)%7));return x}
 const fmtShort=d=>d.toLocaleDateString("en-GB",{day:"numeric",month:"short"});
 function fmtTime(ts){const d=new Date(ts),now=new Date();const t=d.toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"});
   if(dkey(d)===dkey(now))return "Today · "+t;if(dkey(d)===dkey(addDays(now,-1)))return "Yesterday · "+t;
@@ -721,17 +723,17 @@ const excused=(p,wk)=>pauses.some(x=>x.user===p&&x.week===wk&&pauseState(x)==="a
 const pauseReview=()=>pauses.filter(x=>x.user!==me&&pauseState(x)==="pending"&&!(x.votes||{})[me]);
 const toReview=()=>checkins.filter(c=>c.user!==me&&proofState(c)==="pending"&&!["approve","cap"].includes((c.reactions||{})[me]));
 function seasonStart(){if(settings.start)return parseKey(settings.start);
-  const first=checkins.length?checkins[checkins.length-1].date:dkey(new Date());return weekStart(parseKey(first))}
+  const first=checkins.length?checkins[checkins.length-1].date:dkey(gday());return weekStart(parseKey(first))}
 function tally(fromKey,toKey){const s={};PEOPLE.forEach(p=>s[p]={weights:0,cardio:0,last:0});
   checkins.forEach(c=>{if(c.date>=fromKey&&c.date<toKey&&s[c.user]&&counts(c)){s[c.user][c.type]++;s[c.user].last=Math.max(s[c.user].last,c.ts)}});return s}
 const missed=x=>Math.max(0,3-x.weights)+Math.max(0,4-x.cardio);
 function pastWeeks(){const ws=weekStart(),out=[];let w=seasonStart();
   while(w<ws){out.push({start:w,t:tally(dkey(w),dkey(addDays(w,7)))});w=addDays(w,7)}return out}
 function dayStreak(p){const days=new Set(checkins.filter(c=>c.user===p&&counts(c)).map(c=>c.date));
-  let d=new Date();if(!days.has(dkey(d)))d=addDays(d,-1);let n=0;while(days.has(dkey(d))){n++;d=addDays(d,-1)}return n}
+  let d=gday();if(!days.has(dkey(d)))d=addDays(d,-1);let n=0;while(days.has(dkey(d))){n++;d=addDays(d,-1)}return n}
 function board(){
   const ws=weekStart(),t=tally(dkey(ws),dkey(addDays(ws,7))),hist=pastWeeks();
-  const daysLeft=7-((new Date().getDay()+6)%7),todayK=dkey(new Date());
+  const daysLeft=7-((gday().getDay()+6)%7),todayK=dkey(gday());
   return PEOPLE.map(p=>{const x=t[p];const nw=Math.max(0,3-x.weights),nc=Math.max(0,4-x.cardio);
     const sw=daysLeft-(checkins.some(c=>c.user===p&&c.date===todayK&&c.type==="weights")?1:0);
     const sc=daysLeft-(checkins.some(c=>c.user===p&&c.date===todayK&&c.type==="cardio")?1:0);
@@ -765,7 +767,7 @@ async function uploadPhoto(file,key){
   if(src.length>230000){const c2=document.createElement("canvas");c2.width=Math.round(canvas.width*.7);c2.height=Math.round(canvas.height*.7);c2.getContext("2d").drawImage(canvas,0,0,c2.width,c2.height);src=c2.toDataURL("image/jpeg",.6)}
   const pid=key+"_"+Date.now();await db.doc("photos/"+pid).set({src,user:me});photoCache[pid]=src;return {doc:pid};
 }
-const doneToday=type=>{const k=dkey(new Date());return checkins.some(c=>c.user===me&&c.date===k&&c.type===type&&proofState(c)!=="rejected")};
+const doneToday=type=>{const k=dkey(gday());return checkins.some(c=>c.user===me&&c.date===k&&c.type===type&&proofState(c)!=="rejected")};
 const STATUS={ok:"Duty done",track:"On track",tight:"Tight",out:"Out of reach",excused:"Excused"};
 
 /* ---------- photos ---------- */
@@ -850,7 +852,7 @@ const mList=c=>(c.muscles||[]).map(mName).join(" · ");
 function splitStats(p,fromKey,toKey){const o={};MUSCLES.forEach(([k])=>o[k]={n:0,last:null});
   checkins.filter(c=>c.user===p&&c.type==="weights"&&counts(c)).forEach(c=>(c.muscles||[]).forEach(k=>{if(!o[k])return;
     if(c.date>=fromKey&&c.date<toKey)o[k].n++;if(!o[k].last||c.date>o[k].last)o[k].last=c.date}));return o}
-function ago(k){if(!k)return "Not yet";const d=Math.round((parseKey(dkey(new Date()))-parseKey(k))/864e5);return d===0?"Today":d===1?"Yesterday":d+" days ago"}
+function ago(k){if(!k)return "Not yet";const d=Math.round((parseKey(dkey(gday()))-parseKey(k))/864e5);return d===0?"Today":d===1?"Yesterday":d+" days ago"}
 function splitCard(){const ws=weekStart(),st=splitStats(me,dkey(ws),dkey(addDays(ws,7)));
   const due=MUSCLES.map(([k])=>k).sort((a,b)=>(st[a].last||"")<(st[b].last||"")?-1:1)[0];
   const hit=MUSCLES.filter(([k])=>st[k].n).length;
@@ -863,7 +865,7 @@ function crewSplitCard(){const ws=weekStart(),f=dkey(ws),t=dkey(addDays(ws,7));
     ${PEOPLE.map(p=>{const st=splitStats(p,f,t);return `<div class="cs-name" data-p="${p}">${mg(p,"sm")}${p}</div>${MUSCLES.map(([k])=>`<span class="cs-cell ${st[k].n?"on":""}" data-p="${p}">${st[k].n||""}</span>`).join("")}`}).join("")}</div></section>`}
 let ovMonth=null,ovDay=null;
 function overviewHTML(){
-  const now=new Date();ovMonth=ovMonth||new Date(now.getFullYear(),now.getMonth(),1);
+  const now=gday();ovMonth=ovMonth||new Date(now.getFullYear(),now.getMonth(),1);
   const first=new Date(ovMonth),lead=(first.getDay()+6)%7,days=new Date(first.getFullYear(),first.getMonth()+1,0).getDate();
   const today=dkey(now),sk=dkey(seasonStart()),ek=dkey(seasonEnd());
   const byDay={};checkins.filter(counts).forEach(c=>{(byDay[c.date]=byDay[c.date]||{})[c.user]=((byDay[c.date]||{})[c.user]||[]).concat(c.type)});
@@ -928,7 +930,7 @@ function ring(pct,label,sub,cls=""){const r=30,c=2*Math.PI*r,o=c*(1-Math.max(0,M
 const DEFAULT_END="2026-12-31";
 const seasonName=()=>settings.name||"Winter Arc";
 const seasonEnd=()=>parseKey(settings.end||DEFAULT_END);
-function season(){const s=seasonStart(),e=seasonEnd(),today=new Date(new Date().getFullYear(),new Date().getMonth(),new Date().getDate());
+function season(){const s=seasonStart(),e=seasonEnd(),today=new Date(gday().getFullYear(),gday().getMonth(),gday().getDate());
   const total=Math.max(1,Math.round((e-s)/864e5)+1),day=Math.max(0,Math.min(total,Math.round((today-s)/864e5)+1));
   return {start:s,end:e,total,day,weeks:Math.ceil(total/7)}}
 function mine(p=me){return checkins.filter(c=>c.user===p&&counts(c))}
@@ -982,7 +984,7 @@ function render(){
 }
 
 function homeHTML(){
-  const b=board(),m=b.find(x=>x.name===me),sn=season(),daysLeft=7-((new Date().getDay()+6)%7);
+  const b=board(),m=b.find(x=>x.name===me),sn=season(),daysLeft=7-((gday().getDay()+6)%7);
   const h=new Date().getHours(),greet=h<5?"Up early":h<12?"Good morning":h<18?"Good afternoon":"Good evening";
   const seg=(n,g,pd=0)=>`<div class="segs" style="grid-template-columns:repeat(${g},1fr)">${Array.from({length:g},(_,i)=>`<div class="seg ${i<n?"on":i<n+pd?"pend":""}"></div>`).join("")}</div>`;
   const dots=(n,g)=>`<span class="dots">${Array.from({length:g},(_,i)=>`<i class="${i<n?"on":""}"></i>`).join("")}</span>`;
@@ -1050,7 +1052,7 @@ function homeHTML(){
 function progressHTML(){
   const sn=season(),ws=weekStart(),list=mine(),b=board(),m=b.find(x=>x.name===me);
   const target=sn.weeks*7,done=list.length;
-  const now=new Date(),mStart=new Date(now.getFullYear(),now.getMonth(),1),from=mStart<sn.start?sn.start:mStart;
+  const now=gday(),mStart=new Date(now.getFullYear(),now.getMonth(),1),from=mStart<sn.start?sn.start:mStart;
   const mDays=Math.max(1,Math.round((new Date(now.getFullYear(),now.getMonth(),now.getDate())-from)/864e5)+1);
   const mk=dkey(from),inMonth=list.filter(c=>c.date>=mk&&c.date.slice(0,7)===dkey(now).slice(0,7));
   const mVisit=new Set(inMonth.map(c=>c.date)).size;
@@ -1314,7 +1316,7 @@ function pageHero({variant,eyebrow,title,sub,right="",stats=[]}){
 
 
 function historyHTML(){
-  histUser=histUser||me;const now=new Date();histMonth=histMonth||new Date(now.getFullYear(),now.getMonth(),1);
+  histUser=histUser||me;const now=gday();histMonth=histMonth||new Date(now.getFullYear(),now.getMonth(),1);
   const ALL=histUser==="All",mine=checkins.filter(c=>ALL||c.user===histUser),byDay={};mine.forEach(c=>(byDay[c.date]=byDay[c.date]||[]).push(c));
   const first=new Date(histMonth),lead=(first.getDay()+6)%7,days=new Date(first.getFullYear(),first.getMonth()+1,0).getDate(),today=dkey(now);
   let cells="";for(let i=0;i<lead;i++)cells+=`<div class="day blank"></div>`;
@@ -1474,7 +1476,7 @@ function openCheckin(){
       const needM=false;
       const label=needM?"Pick what you trained":!file?"Photo required":!chk||chk.state==="retry"?"Check photo":chk.state==="checking"?"Checking…":chk.state==="fail"?"Retake photo":chk.state==="flag"?"Post for crew review":canPost?"Log "+(type==="weights"?"weights":"cardio"):chk.state==="manual"&&!(manMin&&manKcal)?"Enter both numbers":"Numbers too low";
       bg.innerHTML=`<div class="sheet" role="dialog" aria-modal="true" aria-label="Check in"><div class="grab"></div>
-        <div class="sheet-top"><div><div class="eyebrow">${new Date().toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long"})}</div><h2>Check in</h2></div><button class="x" type="button" aria-label="Close">×</button></div>
+        <div class="sheet-top"><div><div class="eyebrow">${gday().toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long"})}</div><h2>Check in</h2></div><button class="x" type="button" aria-label="Close">×</button></div>
         ${both?`<div class="empty"><b>Done for today</b>Weights and cardio are both logged. See you tomorrow.</div>`:`
         <div class="types">${["weights","cardio"].map(t=>{const d=doneToday(t);return `<button type="button" class="tbtn" data-t="${t}" aria-pressed="${type===t}" ${d?"disabled":""}>
           <b>${t==="weights"?"Weights":"Cardio"}</b><small>${d?"Logged today":t==="weights"?"Photo in the gym":`Result screen · ${CARDIO_MIN}+ min · ${bar}+ kcal`}</small></button>`}).join("")}</div>
@@ -1539,7 +1541,7 @@ function openCheckin(){
         if(type==="cardio"){if(chk.state==="manual"){const p=evalCardio(+manMin,+manKcal);if(p.length)throw new Error("Doesn't count: "+p.join(", ")+".");verify={by:"manual",minutes:+manMin,calories:+manKcal,bar}}
           else verify={by:"ai",minutes:chk.minutes,calories:chk.calories,activity:chk.activity,distance:chk.distance,bar}}
         else verify={by:chk.state==="flag"?"flagged":chk.by==="manual"?"manual":"ai",reason:chk.reason||""};
-        const now=new Date(),date=dkey(now),id=`${me}_${date}_${type}`;const photos=[];for(let i=0;i<files.length;i++){go.textContent=files.length>1?`Uploading ${i+1}/${files.length}…`:"Uploading…";photos.push(await uploadPhoto(files[i],id+"_"+i))}const photo=photos[0];
+        const now=new Date(),date=dkey(gday()),id=`${me}_${date}_${type}`;const photos=[];for(let i=0;i<files.length;i++){go.textContent=files.length>1?`Uploading ${i+1}/${files.length}…`:"Uploading…";photos.push(await uploadPhoto(files[i],id+"_"+i))}const photo=photos[0];
         const doc={user:me,type,date,ts:now.getTime(),photo,photos,reactions:{},verify};if(type==="weights"&&muscles.length)doc.muscles=MUSCLES.map(m=>m[0]).filter(k=>muscles.includes(k));if(note.trim())doc.note=note.trim().slice(0,140);
         await db.doc("checkins/"+id).set(doc);pvs.forEach(u=>URL.revokeObjectURL(u));close0();showSuccess(doc);
       }catch(x){err.textContent=x&&x.code==="invalid_argument"?"You don't have permission to save. That isn't yours to change.":x&&x.code==="quota_exceeded"?"Club storage is full. Remove some old check-ins first.":(x&&x.message&&!x.code?x.message:"Upload failed. Check your connection and try again.");
