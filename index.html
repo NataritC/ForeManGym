@@ -993,8 +993,7 @@ function homeHTML(){
   const due=Math.max(0,m.owed-m.pending);
   const payBtn=due>0?`<button class="pay-cta" type="button" id="payNow"><div><span>You owe the pot</span><b class="mono">${baht(due)}</b></div><em>Pay now</em></button>`
     :m.pending>0?`<button class="pay-cta pending" type="button" id="payNow"><div><span>Waiting for ${esc(settings.treasurer||"the treasurer")} to confirm</span><b class="mono">${baht(m.pending)}</b></div><em>Pending</em></button>`:"";
-  const both=doneToday("weights")&&doneToday("cardio");
-  const trainSub=both?"Both sessions logged today. Recover well.":m.status==="ok"?"Week goal hit. Extra sessions still count toward your streak.":`${m.nw} weights + ${m.nc} cardio left this week`;
+  const trainSub=m.status==="ok"?"Week goal hit. Extra sessions still count toward your streak.":`${m.nw} weights + ${m.nc} cardio left this week`;
   const recent=checkins.slice(0,5);
   return `
   <section class="hero">${SCENE}
@@ -1005,7 +1004,7 @@ function homeHTML(){
     </div>
   </section>
 
-  <button class="train ${both?"done":""}" type="button" id="train"><b>${both?"Done for today":"Check in to train"}</b><span>${trainSub}</span></button>
+  <button class="train" type="button" id="train"><b>Check in to train</b><span>${trainSub}</span></button>
 
   ${accounts[me]&&!accounts[me].pwChanged?`<button class="pw-nudge" type="button" id="pwNudge"><b>🔒 You're still on password 0000</b><span>Set your own so nobody can sign in as you ›</span></button>`:""}
   ${toReview().length+pauseReview().length?`<button class="review-cta" type="button" data-goto="proof"><span class="rv-n mono">${toReview().length+pauseReview().length}</span><div><b>Waiting for your vote</b><span>Approve or cap your friends' sessions</span></div><em>Review ›</em></button>`:""}
@@ -1025,7 +1024,7 @@ function homeHTML(){
     ${m.pw||m.pc?`<p class="hint" style="margin-top:10px">Striped = ${m.pw+m.pc} session${m.pw+m.pc>1?"s":""} waiting for ${APPROVALS_NEEDED} friend approvals.</p>`:""}
     <div class="goal-foot">${m.exc&&m.status!=="ok"?`<span>Excused this week. No fee, streak paused.</span>`:m.status==="ok"?`<span>Week complete. No fee this week.</span>`:`<span>Miss it and pay</span><span class="risk"><b class="mono">${baht(m.risk)}</b> at risk</span>`}</div>
     <div class="bar-note">${minKcal(me)?`Cardio counts at <b>${CARDIO_MIN}+ min · ${minKcal(me)}+ kcal</b> for you.`:`Add your weight in Profile to set your cardio target.`}</div>
-    <p class="hint" style="margin-top:8px">Train any days, any order, Monday to Sunday. Up to 1 weights + 1 cardio per day. A session counts once 2 friends approve it, or after 48h if nobody objects.</p>
+    <p class="hint" style="margin-top:8px">Train any days, any order, Monday to Sunday. Log as many sessions a day as you like. A session counts once 2 friends approve it, or after 48h if nobody objects.</p>
   </section>
 
   ${splitCard()}
@@ -1453,7 +1452,7 @@ function openProfile(required){
 }
 function openCheckin(){
   if(!profiles[me]||!profiles[me].weight){openProfile(true);return}
-  let type=!doneToday("weights")?"weights":!doneToday("cardio")?"cardio":null,file=null,note="",pv=null,files=[],pvs=[];
+  let type=!doneToday("weights")||doneToday("cardio")?"weights":"cardio",file=null,note="",pv=null,files=[],pvs=[];
   const MAX_PHOTOS=5;
   let muscles=[];
   let chk=null;           // {state:"checking"|"pass"|"fail"|"retry"|"manual", ...}
@@ -1462,7 +1461,7 @@ function openCheckin(){
   const bar=minKcal(me);
   sheet((bg,close0)=>{const close=()=>{if(ctl)ctl.abort();close0()};
     const evalCardio=(min,kcal)=>{const probs=[];if(!(min>=CARDIO_MIN))probs.push(`only ${Math.round(min||0)} min (need ${CARDIO_MIN}+)`);if(!(kcal>=bar))probs.push(`only ${Math.round(kcal||0)} kcal (need ${bar}+ at ${profiles[me].weight} kg)`);return probs};
-    const draw=()=>{const both=doneToday("weights")&&doneToday("cardio");
+    const draw=()=>{
       let verdict="";
       if(chk){
         if(chk.state==="checking")verdict=`<div class="verdict"><span class="spin"></span><div><b>Checking your photo…</b><span>The AI referee is reading it. Usually 10–30 seconds.</span></div></div>`;
@@ -1479,9 +1478,9 @@ function openCheckin(){
       const label=needM?"Pick what you trained":!file?"Photo required":!chk||chk.state==="retry"?"Check photo":chk.state==="checking"?"Checking…":chk.state==="fail"?"Retake photo":chk.state==="flag"?"Post for crew review":canPost?"Log "+(type==="weights"?"weights":"cardio"):chk.state==="manual"&&!(manMin&&manKcal)?"Enter both numbers":"Numbers too low";
       bg.innerHTML=`<div class="sheet" role="dialog" aria-modal="true" aria-label="Check in"><div class="grab"></div>
         <div class="sheet-top"><div><div class="eyebrow">${gday().toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long"})}</div><h2>Check in</h2></div><button class="x" type="button" aria-label="Close">×</button></div>
-        ${both?`<div class="empty"><b>Done for today</b>Weights and cardio are both logged. See you tomorrow.</div>`:`
-        <div class="types">${["weights","cardio"].map(t=>{const d=doneToday(t);return `<button type="button" class="tbtn" data-t="${t}" aria-pressed="${type===t}" ${d?"disabled":""}>
-          <b>${t==="weights"?"Weights":"Cardio"}</b><small>${d?"Logged today":t==="weights"?"Photo in the gym":`Result screen · ${CARDIO_MIN}+ min · ${bar}+ kcal`}</small></button>`}).join("")}</div>
+        ${`
+        <div class="types">${["weights","cardio"].map(t=>{const d=doneToday(t);return `<button type="button" class="tbtn" data-t="${t}" aria-pressed="${type===t}">
+          <b>${t==="weights"?"Weights":"Cardio"}</b><small>${d?"Logged today · add another":t==="weights"?"Photo in the gym":`Result screen · ${CARDIO_MIN}+ min · ${bar}+ kcal`}</small></button>`}).join("")}</div>
         ${files.length?`<div class="shots">${pvs.map((u,i)=>`<div class="shot"><img src="${u}" alt="Proof photo ${i+1}">${i===0?`<span class="cover">Cover</span>`:""}<button type="button" class="shot-x" data-rm="${i}" aria-label="Remove photo ${i+1}">×</button></div>`).join("")}
           ${files.length<MAX_PHOTOS?`<label class="shot add" for="ph"><span>＋</span><small>Add photo</small><input id="ph" type="file" accept="image/*" multiple></label>`:""}</div>
           <p class="hint">${files.length}/${MAX_PHOTOS} photos · the first one is the cover</p>`
@@ -1498,7 +1497,7 @@ function openCheckin(){
         <button class="btn ${chk&&chk.state==="flag"?"line-b":""}" id="go" type="button" ${!file||needM||(chk&&chk.state==="checking")||(chk&&chk.state==="manual"&&!canPost)?"disabled":""}>${label}</button>
         ${chk&&chk.state==="flag"?`<button class="btn" id="retake" type="button">Retake photo</button>`:""}`}
       </div>`;
-      bg.querySelector(".x").onclick=close;if(both)return;
+      bg.querySelector(".x").onclick=close;
       bg.querySelectorAll(".tbtn").forEach(b=>b.onclick=()=>{const nt=b.dataset.t;if(type===nt)return;
         if(ctl)ctl.abort();if(chk&&chk.state==="checking")chk=null;
         stash[type]={file,pv,files,pvs,chk,manMin,manKcal};
@@ -1538,12 +1537,12 @@ function openCheckin(){
       else chk=r.in_gym?{state:"pass",by:"ai",reason:r.reason||"Gym session confirmed."}:{state:"flag",reason:r.reason||""};
       draw()};
     const submit=async()=>{const go=bg.querySelector("#go"),err=bg.querySelector("#serr");err.hidden=true;go.disabled=true;go.textContent="Uploading…";
-      try{if(doneToday(type))throw new Error("You already logged "+type+" today.");
+      try{
         let verify;
         if(type==="cardio"){if(chk.state==="manual"){const p=evalCardio(+manMin,+manKcal);if(p.length)throw new Error("Doesn't count: "+p.join(", ")+".");verify={by:"manual",minutes:+manMin,calories:+manKcal,bar}}
           else verify={by:"ai",minutes:chk.minutes,calories:chk.calories,activity:chk.activity,distance:chk.distance,bar}}
         else verify={by:chk.state==="flag"?"flagged":chk.by==="manual"?"manual":"ai",reason:chk.reason||""};
-        const now=new Date(),date=dkey(gday()),id=`${me}_${date}_${type}`;const photos=[];for(let i=0;i<files.length;i++){go.textContent=files.length>1?`Uploading ${i+1}/${files.length}…`:"Uploading…";photos.push(await uploadPhoto(files[i],id+"_"+i))}const photo=photos[0];
+        const now=new Date(),date=dkey(gday()),id=`${me}_${date}_${type}_${now.getTime()}`;const photos=[];for(let i=0;i<files.length;i++){go.textContent=files.length>1?`Uploading ${i+1}/${files.length}…`:"Uploading…";photos.push(await uploadPhoto(files[i],id+"_"+i))}const photo=photos[0];
         const doc={user:me,type,date,ts:now.getTime(),photo,photos,reactions:{},verify};if(type==="weights"&&muscles.length)doc.muscles=MUSCLES.map(m=>m[0]).filter(k=>muscles.includes(k));if(note.trim())doc.note=note.trim().slice(0,140);
         await db.doc("checkins/"+id).set(doc);pvs.forEach(u=>URL.revokeObjectURL(u));close0();showSuccess(doc);
       }catch(x){err.textContent=x&&x.code==="invalid_argument"?"You don't have permission to save. That isn't yours to change.":x&&x.code==="quota_exceeded"?"Club storage is full. Remove some old check-ins first.":(x&&x.message&&!x.code?x.message:"Upload failed. Check your connection and try again.");
