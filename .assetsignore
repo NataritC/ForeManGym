@@ -1,0 +1,9 @@
+.git
+.claude
+supabase
+CLAUDE.md
+README.md
+netlify.toml
+wrangler.jsonc
+.assetsignore
+_headers

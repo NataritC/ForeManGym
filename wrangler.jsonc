@@ -1,0 +1,7 @@
+// Cloudflare Workers: serve the repo as a static site (no build step).
+{
+  "name": "foremangym",
+  "compatibility_date": "2026-10-01",
+  "assets": { "directory": "./", "not_found_handling": "single-page-application" },
+  "workers_dev": true
+}

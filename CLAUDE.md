@@ -1,7 +1,7 @@
 # Fore Man Gym
 
 Private gym-challenge web app for 4 friends: **Boss, Ice, Ikkew, Ong**. Owner: **Ice** (Natarit).
-Hosted on Netlify (auto-deploys from this repo, publish dir = repo root, no build step). Data on Supabase.
+Hosted on Netlify + Cloudflare Workers (`wrangler.jsonc`; both auto-deploy from `main`, publish dir = repo root, no build step). Data on Supabase.
 
 ## Files
 - `index.html` — the whole app (HTML + CSS + JS in one file). Mobile-first, iPhone Pro Max tuned.
