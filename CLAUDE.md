@@ -12,7 +12,7 @@ Hosted on Netlify + Cloudflare Workers (`wrangler.jsonc`; both auto-deploy from 
 
 ## Rules the app enforces
 - Day runs 6am–6am (before 6am counts as the previous day). Week = Monday 6am–next Monday 6am. Goal: at least 3 weights + 4 cardio (7 sessions). No daily cap: any number of sessions per day, each counts.
-- Cardio counts only with 40+ min and kcal ≥ weight × 333/78 (78 kg → 333 kcal).
+- Cardio counts with 40+ min (no calorie requirement).
 - Proof: up to 5 photos per check-in. A session counts when 2 friends approve; 2 caps = rejected;
   after 48h undecided → majority of votes, no votes = approved. Sender can't vote on own session.
 - Penalty per week at Sunday close: 1st miss ฿300, 2nd +฿500, each after +฿300. Excused weeks (2 approvals) = no fee.

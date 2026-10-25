@@ -1023,7 +1023,7 @@ function homeHTML(){
     <div class="goal"><span>Cardio</span>${seg(m.cardio,4,m.pc)}<span class="mono">${m.cardio}/4</span></div>
     ${m.pw||m.pc?`<p class="hint" style="margin-top:10px">Striped = ${m.pw+m.pc} session${m.pw+m.pc>1?"s":""} waiting for ${APPROVALS_NEEDED} friend approvals.</p>`:""}
     <div class="goal-foot">${m.exc&&m.status!=="ok"?`<span>Excused this week. No fee, streak paused.</span>`:m.status==="ok"?`<span>Week complete. No fee this week.</span>`:`<span>Miss it and pay</span><span class="risk"><b class="mono">${baht(m.risk)}</b> at risk</span>`}</div>
-    <div class="bar-note">${minKcal(me)?`Cardio counts at <b>${CARDIO_MIN}+ min · ${minKcal(me)}+ kcal</b> for you.`:`Add your weight in Profile to set your cardio target.`}</div>
+    <div class="bar-note">Cardio counts at <b>${CARDIO_MIN}+ min</b>.</div>
     <p class="hint" style="margin-top:8px">Train any days, any order, Monday to Sunday. Log as many sessions a day as you like. A session counts once 2 friends approve it, or after 48h if nobody objects.</p>
   </section>
 
@@ -1043,7 +1043,7 @@ function homeHTML(){
     <div class="card-h"><h2>Recent check-ins</h2>${checkins.length?`<button type="button" data-goto="proof">See all</button>`:""}</div>
     ${!loaded?`<p class="hint">Syncing with the crew…</p>`:recent.length?`<div class="recent">${recent.map(c=>`
       <button class="rrow" type="button" data-goto="proof" data-p="${c.user}"><span class="thumb">${photoHTML(c)}</span>
-        <span><span class="who">${esc(c.user)}</span><br><span class="meta">${fmtTime(c.ts)}${c.verify&&c.verify.minutes?` · ${Math.round(c.verify.minutes)} min · ${Math.round(c.verify.calories)} kcal`:""}${c.muscles&&c.muscles.length?" · "+mList(c):""}</span></span>
+        <span><span class="who">${esc(c.user)}</span><br><span class="meta">${fmtTime(c.ts)}${c.verify&&c.verify.minutes?` · ${Math.round(c.verify.minutes)} min${c.verify.calories!=null?` · ${Math.round(c.verify.calories)} kcal`:""}`:""}${c.muscles&&c.muscles.length?" · "+mList(c):""}</span></span>
         <span class="rstat ${proofState(c)}">${proofState(c)==="approved"?"✓":proofState(c)==="rejected"?"🧢":approvals(c)+"/"+APPROVALS_NEEDED}</span></button>`).join("")}</div>`
       :`<div class="empty" style="border:0;padding:12px 0;background:none"><b>No sessions yet</b>Tap Check in to train after your workout.</div>`}
   </section>
@@ -1104,7 +1104,7 @@ function profileHTML(){
       <div><span class="label">Height</span><b class="mono">${pr.height?pr.height+"<small style='font-size:12px;color:var(--sub)'> cm</small>":"—"}</b></div>
       <div><span class="label">BMI</span><b class="mono">${pr.weight&&pr.height?(pr.weight/((pr.height/100)**2)).toFixed(1):"—"}</b></div>
     </div>
-    <p class="bar-note">${minKcal(me)?`Cardio target: <b>${CARDIO_MIN}+ min · ${minKcal(me)}+ kcal</b> per session.`:"Add your weight to set your cardio target."}</p>
+    <p class="bar-note">Cardio target: <b>${CARDIO_MIN}+ min</b> per session.</p>
     <button class="btn line-b" type="button" id="editBody2" style="width:100%;margin-top:14px">Edit body stats</button>
   </section>
 
@@ -1145,7 +1145,7 @@ function showSuccess(doc){
   el.innerHTML=`<div class="success-in"><div class="tick">${IC.tick}</div>
     <h2>Check-in successful</h2>
     <div class="when">${d.toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long",year:"numeric"})} · ${d.toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"})}</div>
-    <div class="what">${doc.type==="weights"?"Weight training"+(doc.muscles&&doc.muscles.length?" · "+mList(doc):""):"Cardio"}${v.minutes?` · ${Math.round(v.minutes)} min · ${Math.round(v.calories)} kcal`:""}</div>
+    <div class="what">${doc.type==="weights"?"Weight training"+(doc.muscles&&doc.muscles.length?" · "+mList(doc):""):"Cardio"}${v.minutes?` · ${Math.round(v.minutes)} min${v.calories!=null?` · ${Math.round(v.calories)} kcal`:""}`:""}</div>
     <p class="hint">It counts once ${APPROVALS_NEEDED} friends approve it on the Proof wall, or automatically in ${AUTO_H}h if nobody caps it.</p>
     <p class="motto">Another day. Another step forward.</p>
     <button class="btn" type="button">Continue</button></div>`;
@@ -1416,10 +1416,9 @@ function sheet(build){const bg=document.createElement("div");bg.className="sheet
   const close=()=>{bg.remove();document.body.classList.remove("lock");render()};bg.addEventListener("click",e=>{if(e.target===bg)close()});build(bg,close)}
 let profilesLoaded=false,askedProfile=false;
 function askProfile(){if(me&&profilesLoaded&&!askedProfile&&!(profiles[me]&&profiles[me].weight)&&!document.querySelector(".sheet-bg")){askedProfile=true;openProfile(true)}}
-const CARDIO_MIN=40,KCAL_PER_KG=333/78;   // 78 kg → 333 kcal is the bar; scales with body weight
-const minKcal=p=>{const w=+(profiles[p]||{}).weight;return w?Math.round(w*KCAL_PER_KG):null};
+const CARDIO_MIN=40;   // cardio counts at 40+ minutes
 function verifyBadge(c){const v=c.verify||{};
-  if(c.type==="cardio"&&v.minutes!=null)return `<div class="vbadge">⏱ ${Math.round(v.minutes)} min · 🔥 ${Math.round(v.calories)} kcal</div>`;
+  if(c.type==="cardio"&&v.minutes!=null)return `<div class="vbadge">⏱ ${Math.round(v.minutes)} min${v.calories!=null?` · 🔥 ${Math.round(v.calories)} kcal`:""}</div>`;
   return "";
 }
 
@@ -1432,7 +1431,6 @@ function openProfile(required){
   sheet((bg,close)=>{
     bg.innerHTML=`<div class="sheet" role="dialog" aria-modal="true" aria-label="Body stats"><div class="grab"></div>
       <div class="sheet-top"><div><div class="eyebrow">${required?"One-time setup":"Member profile"}</div><h2>Body stats</h2></div>${required?"":`<button class="x" type="button" aria-label="Close">×</button>`}</div>
-      <p class="hint">Your weight sets your cardio calorie target. At 78 kg the bar is 333 kcal per session, and it scales with your weight.</p>
       <div class="types"><div class="field"><label class="label" for="pW">Weight (kg)</label><input id="pW" type="number" inputmode="decimal" min="30" max="250" step="0.1" value="${pr.weight||""}"></div>
         <div class="field"><label class="label" for="pH">Height (cm)</label><input id="pH" type="number" inputmode="decimal" min="120" max="230" step="0.5" value="${pr.height||""}"></div></div>
       <div class="hint" id="pPrev"></div>
@@ -1440,7 +1438,7 @@ function openProfile(required){
       <button class="btn" id="pSave" type="button">Save</button></div>`;
     const x=bg.querySelector(".x");if(x)x.onclick=close;
     const prev=()=>{const w=+bg.querySelector("#pW").value,h=+bg.querySelector("#pH").value;
-      bg.querySelector("#pPrev").innerHTML=w?`Your cardio bar: <b style="color:var(--gold-2)">${CARDIO_MIN}+ min and ${Math.round(w*KCAL_PER_KG)}+ kcal</b>${h?` · BMI ${(w/((h/100)**2)).toFixed(1)}`:""}`:""};
+      bg.querySelector("#pPrev").innerHTML=w&&h?`BMI ${(w/((h/100)**2)).toFixed(1)}`:""};
     prev();bg.querySelector("#pW").oninput=prev;bg.querySelector("#pH").oninput=prev;
     bg.querySelector("#pSave").onclick=async()=>{const e=bg.querySelector("#pErr");e.hidden=true;
       const w=+bg.querySelector("#pW").value,h=+bg.querySelector("#pH").value;
@@ -1456,36 +1454,34 @@ function openCheckin(){
   const MAX_PHOTOS=5;
   let muscles=[];
   let chk=null;           // {state:"checking"|"pass"|"fail"|"retry"|"manual", ...}
-  let manMin="",manKcal="",ctl=null;
+  let manMin="",ctl=null;
   const stash={};   // each category keeps its own photo + check
-  const bar=minKcal(me);
   sheet((bg,close0)=>{const close=()=>{if(ctl)ctl.abort();close0()};
-    const evalCardio=(min,kcal)=>{const probs=[];if(!(min>=CARDIO_MIN))probs.push(`only ${Math.round(min||0)} min (need ${CARDIO_MIN}+)`);if(!(kcal>=bar))probs.push(`only ${Math.round(kcal||0)} kcal (need ${bar}+ at ${profiles[me].weight} kg)`);return probs};
+    const evalCardio=min=>{const probs=[];if(!(min>=CARDIO_MIN))probs.push(`only ${Math.round(min||0)} min (need ${CARDIO_MIN}+)`);return probs};
     const draw=()=>{
       let verdict="";
       if(chk){
         if(chk.state==="checking")verdict=`<div class="verdict"><span class="spin"></span><div><b>Checking your photo…</b><span>The AI referee is reading it. Usually 10–30 seconds.</span></div></div>`;
-        else if(chk.state==="pass")verdict=`<div class="verdict ok"><b>${chk.by==="manual"?"📸 Photo added":"✓ AI approved"}</b><span>${type==="cardio"?`${Math.round(chk.minutes)} min · ${Math.round(chk.calories)} kcal${chk.activity&&chk.activity!=="other"?" · "+esc(chk.activity):""}. That's a decent session.`:esc(chk.reason||"Gym session confirmed.")}</span></div>`;
+        else if(chk.state==="pass")verdict=`<div class="verdict ok"><b>${chk.by==="manual"?"📸 Photo added":"✓ AI approved"}</b><span>${type==="cardio"?`${Math.round(chk.minutes)} min${chk.calories!=null?` · ${Math.round(chk.calories)} kcal`:""}${chk.activity&&chk.activity!=="other"?" · "+esc(chk.activity):""}. That's a decent session.`:esc(chk.reason||"Gym session confirmed.")}</span></div>`;
         else if(chk.state==="fail")verdict=`<div class="verdict bad"><b>✕ Doesn't count</b><span>${esc(chk.reason)}</span></div>`;
         else if(chk.state==="flag")verdict=`<div class="verdict warn"><b>Couldn't confirm a gym</b><span>${esc(chk.reason||"")} Retake it in the gym, or post it for the crew to judge.</span></div>`;
         else if(chk.state==="retry")verdict=`<div class="verdict bad"><b>Check didn't finish</b><span>${esc(chk.reason)}</span></div>`;
-        else if(chk.state==="manual")verdict=`<div class="verdict"><b>Enter your numbers</b><span>${chk.reason?esc(chk.reason)+" ":""}Type the time and calories from your screen. You need ${CARDIO_MIN}+ min and ${minKcal(me)}+ kcal. Friends compare them with your photo.</span></div>
-          <div class="types"><div class="field"><label class="label" for="mMin">Minutes</label><input id="mMin" type="number" inputmode="decimal" min="0" value="${manMin}"></div>
-          <div class="field"><label class="label" for="mKcal">Calories</label><input id="mKcal" type="number" inputmode="numeric" min="0" value="${manKcal}"></div></div>`;
+        else if(chk.state==="manual")verdict=`<div class="verdict"><b>Enter your numbers</b><span>${chk.reason?esc(chk.reason)+" ":""}Type the time from your screen. You need ${CARDIO_MIN}+ min. Friends compare it with your photo.</span></div>
+          <div class="types"><div class="field"><label class="label" for="mMin">Minutes</label><input id="mMin" type="number" inputmode="decimal" min="0" value="${manMin}"></div></div>`;
       }
-      const canPost=chk&&(chk.state==="pass"||(chk.state==="manual"&&!evalCardio(+manMin,+manKcal).length&&manMin&&manKcal));
+      const canPost=chk&&(chk.state==="pass"||(chk.state==="manual"&&!evalCardio(+manMin).length&&manMin));
       const needM=false;
-      const label=needM?"Pick what you trained":!file?"Photo required":!chk||chk.state==="retry"?"Check photo":chk.state==="checking"?"Checking…":chk.state==="fail"?"Retake photo":chk.state==="flag"?"Post for crew review":canPost?"Log "+(type==="weights"?"weights":"cardio"):chk.state==="manual"&&!(manMin&&manKcal)?"Enter both numbers":"Numbers too low";
+      const label=needM?"Pick what you trained":!file?"Photo required":!chk||chk.state==="retry"?"Check photo":chk.state==="checking"?"Checking…":chk.state==="fail"?"Retake photo":chk.state==="flag"?"Post for crew review":canPost?"Log "+(type==="weights"?"weights":"cardio"):chk.state==="manual"&&!manMin?"Enter your minutes":"Too short";
       bg.innerHTML=`<div class="sheet" role="dialog" aria-modal="true" aria-label="Check in"><div class="grab"></div>
         <div class="sheet-top"><div><div class="eyebrow">${gday().toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long"})}</div><h2>Check in</h2></div><button class="x" type="button" aria-label="Close">×</button></div>
         ${`
         <div class="types">${["weights","cardio"].map(t=>{const d=doneToday(t);return `<button type="button" class="tbtn" data-t="${t}" aria-pressed="${type===t}">
-          <b>${t==="weights"?"Weights":"Cardio"}</b><small>${d?"Logged today · add another":t==="weights"?"Photo in the gym":`Result screen · ${CARDIO_MIN}+ min · ${bar}+ kcal`}</small></button>`}).join("")}</div>
+          <b>${t==="weights"?"Weights":"Cardio"}</b><small>${d?"Logged today · add another":t==="weights"?"Photo in the gym":`Result screen · ${CARDIO_MIN}+ min`}</small></button>`}).join("")}</div>
         ${files.length?`<div class="shots">${pvs.map((u,i)=>`<div class="shot"><img src="${u}" alt="Proof photo ${i+1}">${i===0?`<span class="cover">Cover</span>`:""}<button type="button" class="shot-x" data-rm="${i}" aria-label="Remove photo ${i+1}">×</button></div>`).join("")}
           ${files.length<MAX_PHOTOS?`<label class="shot add" for="ph"><span>＋</span><small>Add photo</small><input id="ph" type="file" accept="image/*" multiple></label>`:""}</div>
           <p class="hint">${files.length}/${MAX_PHOTOS} photos · the first one is the cover</p>`
         :`<label class="drop" for="ph">${type==="cardio"
-          ?`<b>Photos of your results</b><span>Machine screen or watch summary showing time and calories · up to ${MAX_PHOTOS}</span>`
+          ?`<b>Photos of your results</b><span>Machine screen or watch summary showing your time · up to ${MAX_PHOTOS}</span>`
           :`<b>Photos in the gym</b><span>You training, or the gym around you · up to ${MAX_PHOTOS}</span>`}
           <input id="ph" type="file" accept="image/*" multiple></label>`}
         ${type==="weights"?`<div class="field"><span class="label">What did you train? · optional</span>
@@ -1500,8 +1496,8 @@ function openCheckin(){
       bg.querySelector(".x").onclick=close;
       bg.querySelectorAll(".tbtn").forEach(b=>b.onclick=()=>{const nt=b.dataset.t;if(type===nt)return;
         if(ctl)ctl.abort();if(chk&&chk.state==="checking")chk=null;
-        stash[type]={file,pv,files,pvs,chk,manMin,manKcal};
-        const st=stash[nt]||{};type=nt;files=st.files||[];pvs=st.pvs||[];file=files[0]||null;pv=pvs[0]||null;chk=st.chk||null;manMin=st.manMin||"";manKcal=st.manKcal||"";
+        stash[type]={file,pv,files,pvs,chk,manMin};
+        const st=stash[nt]||{};type=nt;files=st.files||[];pvs=st.pvs||[];file=files[0]||null;pv=pvs[0]||null;chk=st.chk||null;manMin=st.manMin||"";
         draw();if(file&&!chk)runCheck()});
       bg.querySelector("#note").oninput=e=>note=e.target.value;
       bg.querySelectorAll("[data-m]").forEach(b=>b.onclick=()=>{const k=b.dataset.m;muscles=muscles.includes(k)?muscles.filter(x=>x!==k):[...muscles,k];draw()});
@@ -1511,9 +1507,9 @@ function openCheckin(){
         if(!had){chk=null;if(ctl)ctl.abort();draw();runCheck()}else draw()};
       bg.querySelectorAll("[data-rm]").forEach(b=>b.onclick=e=>{e.preventDefault();const i=+b.dataset.rm;URL.revokeObjectURL(pvs[i]);files.splice(i,1);pvs.splice(i,1);
         file=files[0]||null;pv=pvs[0]||null;if(!files.length){chk=null;if(ctl)ctl.abort()}draw()});
-      const mm=bg.querySelector("#mMin"),mk=bg.querySelector("#mKcal");
-      if(mm){const upd=()=>{manMin=mm.value;manKcal=mk.value;const g=bg.querySelector("#go");const ok=manMin&&manKcal&&!evalCardio(+manMin,+manKcal).length;g.disabled=!ok;g.textContent=ok?"Log cardio":manMin&&manKcal?"Numbers too low":"Enter both numbers";
-        const er=bg.querySelector("#serr");if(manMin&&manKcal&&!ok){er.textContent="Doesn't count: "+evalCardio(+manMin,+manKcal).join(", ")+".";er.hidden=false}else er.hidden=true};mm.oninput=upd;mk.oninput=upd}
+      const mm=bg.querySelector("#mMin");
+      if(mm){const upd=()=>{manMin=mm.value;const g=bg.querySelector("#go");const ok=manMin&&!evalCardio(+manMin).length;g.disabled=!ok;g.textContent=ok?"Log cardio":manMin?"Too short":"Enter your minutes";
+        const er=bg.querySelector("#serr");if(manMin&&!ok){er.textContent="Doesn't count: "+evalCardio(+manMin).join(", ")+".";er.hidden=false}else er.hidden=true};mm.oninput=upd}
       const rt=bg.querySelector("#retake");if(rt)rt.onclick=()=>bg.querySelector("#ph").click();
       bg.querySelector("#go").onclick=()=>{
         if(!chk||chk.state==="retry")return runCheck();
@@ -1530,17 +1526,17 @@ function openCheckin(){
       else if(r.error)chk={state:"retry",reason:r.error};
       else if(t==="cardio"){
         if(r.is_cardio_result===false)chk={state:"fail",reason:"This doesn't look like a cardio results screen. "+(r.reason||"")+" Take a photo of the machine or watch summary."};
-        else if(r.minutes==null||r.calories==null)chk={state:"manual",reason:"The AI couldn't read "+(r.minutes==null&&r.calories==null?"the time or calories":r.minutes==null?"the time":"the calories")+" clearly."};
-        else{const probs=evalCardio(+r.minutes,+r.calories);
-          chk=probs.length?{state:"fail",reason:`Read ${Math.round(r.minutes)} min and ${Math.round(r.calories)} kcal. That's ${probs.join(" and ")}.`}
-            :{state:"pass",by:"ai",minutes:+r.minutes,calories:+r.calories,activity:r.activity||"",distance:r.distance_km??null}}}
+        else if(r.minutes==null)chk={state:"manual",reason:"The AI couldn't read the time clearly."};
+        else{const probs=evalCardio(+r.minutes);
+          chk=probs.length?{state:"fail",reason:`Read ${Math.round(r.minutes)} min. That's ${probs.join(" and ")}.`}
+            :{state:"pass",by:"ai",minutes:+r.minutes,calories:r.calories!=null?+r.calories:null,activity:r.activity||"",distance:r.distance_km??null}}}
       else chk=r.in_gym?{state:"pass",by:"ai",reason:r.reason||"Gym session confirmed."}:{state:"flag",reason:r.reason||""};
       draw()};
     const submit=async()=>{const go=bg.querySelector("#go"),err=bg.querySelector("#serr");err.hidden=true;go.disabled=true;go.textContent="Uploading…";
       try{
         let verify;
-        if(type==="cardio"){if(chk.state==="manual"){const p=evalCardio(+manMin,+manKcal);if(p.length)throw new Error("Doesn't count: "+p.join(", ")+".");verify={by:"manual",minutes:+manMin,calories:+manKcal,bar}}
-          else verify={by:"ai",minutes:chk.minutes,calories:chk.calories,activity:chk.activity,distance:chk.distance,bar}}
+        if(type==="cardio"){if(chk.state==="manual"){const p=evalCardio(+manMin);if(p.length)throw new Error("Doesn't count: "+p.join(", ")+".");verify={by:"manual",minutes:+manMin}}
+          else verify={by:"ai",minutes:chk.minutes,calories:chk.calories,activity:chk.activity,distance:chk.distance}}
         else verify={by:chk.state==="flag"?"flagged":chk.by==="manual"?"manual":"ai",reason:chk.reason||""};
         const now=new Date(),date=dkey(gday()),id=`${me}_${date}_${type}_${now.getTime()}`;const photos=[];for(let i=0;i<files.length;i++){go.textContent=files.length>1?`Uploading ${i+1}/${files.length}…`:"Uploading…";photos.push(await uploadPhoto(files[i],id+"_"+i))}const photo=photos[0];
         const doc={user:me,type,date,ts:now.getTime(),photo,photos,reactions:{},verify};if(type==="weights"&&muscles.length)doc.muscles=MUSCLES.map(m=>m[0]).filter(k=>muscles.includes(k));if(note.trim())doc.note=note.trim().slice(0,140);
@@ -1556,7 +1552,7 @@ function openSettings(){
       <div class="sheet-top"><div><div class="eyebrow">Signed in as ${me}</div><h2>Settings</h2></div><button class="x" type="button" aria-label="Close">×</button></div>
       <div class="box"><h3>Body stats</h3>
         <div class="payrow">${mg(me,"sm")}<span class="mono">${profiles[me]&&profiles[me].weight?`${profiles[me].weight} kg · ${profiles[me].height} cm`:"Not set"}</span><button type="button" id="editBody">Edit</button></div>
-        ${minKcal(me)?`<p class="hint">Cardio counts at ${CARDIO_MIN}+ min and ${minKcal(me)}+ kcal for you.</p>`:""}</div>
+        <p class="hint">Cardio counts at ${CARDIO_MIN}+ min.</p></div>
       ${isOwner()?"":`<div class="lockbox">🔒 Challenge dates, fees and the pot account can only be changed by the app owner. You can still change your own body stats and password.</div>
       <div class="box"><h3>Challenge</h3><p class="hint">${esc(seasonName())} · ${fmtShort(seasonStart())} – ${fmtShort(seasonEnd())}. Weeks run Monday to Sunday.</p></div>
       <div class="box"><h3>Penalty fees</h3><p class="hint">1st miss ${baht(f.first)} · 2nd +${baht(f.second)} · each after +${baht(f.after)}</p></div>`}
