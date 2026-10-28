@@ -23,7 +23,7 @@
 <style>
 /* Layout: matte-black phone app over a cold 5 AM gym atmosphere. Home = cinematic Winter Arc hero + one focal CHECK IN TO TRAIN button,
    then stats, week goals, crew and recent proof. Bottom nav: Home · Check In · Progress · Profile.
-   Members carry cold tones: Boss ice, Ice frost, Ikkew sage, Ong sand. */
+   Members carry cold tones: Boss ice, Ice frost, Ikkew sage, Ong sand, Army lilac. */
 :root{
   color-scheme:dark;
   --bg:#0A0A0A; --bg-2:#151515; --card:#202020; --card-2:#262626; --edge:rgba(255,255,255,.07); --edge-2:rgba(255,255,255,.12);
@@ -33,7 +33,7 @@
   --cyan:#7FD4E6; --peri:#9DA4F2; --teal:#62C3B0; --indigo:#5A63C9; --frost:#DCEAF2;
   --grad:linear-gradient(120deg,var(--cyan),var(--ice) 45%,var(--peri));
   --glass:rgba(26,28,34,.62); --glass-2:rgba(34,37,45,.7);
-  --m-boss:#A9C7D8; --m-ice:#7FD4E6; --m-ikkew:#62C3B0; --m-ong:#9DA4F2;
+  --m-boss:#A9C7D8; --m-ice:#7FD4E6; --m-ikkew:#62C3B0; --m-ong:#9DA4F2; --m-army:#C3A6F0;
   --display:"Unbounded","Arial Black","Helvetica Neue",sans-serif;
   --body:"Manrope",-apple-system,"Helvetica Neue",system-ui,sans-serif;
   --mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
@@ -70,7 +70,7 @@ h1,h2,h3{font-family:var(--display);margin:0;text-wrap:balance;line-height:1}
 .eyebrow{font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--ice);font-weight:600}
 .label{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--sub);font-weight:600}
 
-[data-p="Boss"]{--m:var(--m-boss)} [data-p="Ice"]{--m:var(--m-ice)} [data-p="Ikkew"]{--m:var(--m-ikkew)} [data-p="Ong"]{--m:var(--m-ong)}
+[data-p="Boss"]{--m:var(--m-boss)} [data-p="Ice"]{--m:var(--m-ice)} [data-p="Ikkew"]{--m:var(--m-ikkew)} [data-p="Ong"]{--m:var(--m-ong)} [data-p="Army"]{--m:var(--m-army)}
 .mono-g{width:40px;height:40px;border-radius:50%;flex:none;display:grid;place-items:center;font-family:var(--display);font-stretch:125%;font-weight:800;font-size:15px;color:var(--m);
   background:linear-gradient(160deg,var(--card-2),var(--bg-2));box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--m) 55%,transparent)}
 .mono-g.sm{width:30px;height:30px;font-size:12px}
@@ -254,7 +254,7 @@ main>*{min-width:0}
 .day.blank{visibility:hidden}
 .day .dots{flex-wrap:wrap;justify-content:center;max-width:30px;height:auto;row-gap:2px}
 .day .dots i{width:5px;height:5px;background:var(--m)}
-.allg{color:var(--cyan);background:conic-gradient(var(--m-boss) 0 25%,var(--m-ice) 0 50%,var(--m-ikkew) 0 75%,var(--m-ong) 0);-webkit-text-fill-color:#0A0A0A}
+.allg{color:var(--cyan);background:conic-gradient(var(--m-boss) 0 20%,var(--m-ice) 0 40%,var(--m-ikkew) 0 60%,var(--m-ong) 0 80%,var(--m-army) 0);-webkit-text-fill-color:#0A0A0A}
 .day .dots i.c{background:transparent;box-shadow:inset 0 0 0 1.2px var(--m)}
 .legend{display:flex;gap:16px;font-size:12px;color:var(--sub);margin-top:12px;align-items:center;flex-wrap:wrap}
 .legend i{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--ice);margin-right:6px}
@@ -446,7 +446,7 @@ main>*{min-width:0}
 /* crew week chart */
 .cw{display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px;margin-top:4px}
 .cw-axis{display:flex;flex-direction:column;justify-content:space-between;height:200px;margin-top:26px;font-family:var(--mono);font-size:10px;color:var(--dim);text-align:right}
-.cw-bars{position:relative;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;align-items:start}
+.cw-bars{position:relative;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;align-items:start}
 .cw-col{display:grid;justify-items:center;gap:8px;min-width:0}
 .cw-track{position:relative;width:100%;max-width:58px;height:200px;border-radius:14px;background:rgba(255,255,255,.04);box-shadow:inset 0 0 0 1px var(--edge);overflow:hidden;isolation:isolate}
 .cw-track::after{content:"";position:absolute;inset:0;z-index:1;border-radius:inherit;pointer-events:none;background:repeating-linear-gradient(0deg,transparent 0 calc(100%/7 - 1px),rgba(255,255,255,.05) calc(100%/7 - 1px) calc(100%/7))}
@@ -524,7 +524,7 @@ html{overflow-x:clip}
 .lg-card::before{content:"";position:absolute;inset:0;border-radius:inherit;padding:1px;pointer-events:none;background:linear-gradient(150deg,rgba(127,212,230,.45),rgba(255,255,255,.05) 40%,rgba(157,164,242,.35));-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude}
 .lg-card h2{font-weight:800;font-size:22px;text-transform:uppercase}
 .lg-card .hint{margin-top:6px}
-.lg-quick{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.lg-quick{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
 .lg-quick button{display:grid;justify-items:center;gap:6px;padding:10px 4px;border-radius:16px;background:rgba(10,12,16,.5);border:1px solid var(--edge);font-size:12px;font-weight:600;color:var(--sub);min-height:44px}
 .lg-quick button[aria-pressed="true"]{border-color:var(--m);color:var(--text);background:color-mix(in srgb,var(--m) 12%,rgba(10,12,16,.5));box-shadow:0 8px 24px -12px var(--m)}
 .lg-field{position:relative;display:flex;align-items:center;gap:10px;min-height:56px;padding:0 8px 0 14px;border-radius:16px;background:rgba(8,9,12,.7);border:1px solid var(--edge-2);transition:border-color .2s,box-shadow .2s}
@@ -673,7 +673,7 @@ html{overflow-x:clip}
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
 <script>
-const PEOPLE=["Boss","Ice","Ikkew","Ong"];
+const PEOPLE=["Boss","Ice","Ikkew","Ong","Army"];
 const TYPE_NAME={weights:"Weight training",cardio:"Cardio"};
 const REACTS=[["strong","💪"],["fire","🔥"],["cap","🧢"]];
 const ROMAN=["I","II","III","IV"];
@@ -1325,7 +1325,7 @@ function historyHTML(){
     cells+=`<button type="button" class="day ${l.length?"has":""} ${k===today?"today":""} ${k===histDay?"sel":""}" data-k="${k}" ${l.length?"":'aria-disabled="true"'}>${d}<span class="dots">${l.slice().sort((a,b)=>PEOPLE.indexOf(a.user)-PEOPLE.indexOf(b.user)||(a.type<b.type?1:-1)).map(c=>`<i data-p="${c.user}" class="${c.type==="cardio"?"c":""}"></i>`).join("")}</span></button>`}
   const valid=mine.filter(counts),sel=histDay&&byDay[histDay]?byDay[histDay]:[];
   return `<section><div class="sec-h"><h2>History</h2><span class="label">${valid.filter(c=>c.type==="weights").length}W · ${valid.filter(c=>c.type==="cardio").length}C all time</span></div>
-  <div class="chips"><button type="button" class="chip all" data-u="All" aria-pressed="${ALL}"><span class="mono-g sm allg">4</span>Everyone</button>${PEOPLE.map(p=>`<button type="button" class="chip" data-u="${p}" aria-pressed="${p===histUser}">${mg(p,"sm")}${p}</button>`).join("")}</div>
+  <div class="chips"><button type="button" class="chip all" data-u="All" aria-pressed="${ALL}"><span class="mono-g sm allg">${PEOPLE.length}</span>Everyone</button>${PEOPLE.map(p=>`<button type="button" class="chip" data-u="${p}" aria-pressed="${p===histUser}">${mg(p,"sm")}${p}</button>`).join("")}</div>
   <div class="cal-nav"><button type="button" id="prevM" aria-label="Previous month">‹</button><h3>${histMonth.toLocaleDateString("en-GB",{month:"long",year:"numeric"})}</h3><button type="button" id="nextM" aria-label="Next month">›</button></div>
   <div class="cal" data-p="${histUser}">${["M","T","W","T","F","S","S"].map(x=>`<div class="dow">${x}</div>`).join("")}${cells}</div>
   <div class="legend"><span><i></i>Weights</span><span><i class="c"></i>Cardio</span>${ALL?PEOPLE.map(p=>`<span data-p="${p}" class="lg-p"><i></i>${p}</span>`).join(""):""}</div>
@@ -1374,7 +1374,7 @@ function renderLogin(){
     const fail=m=>{err.textContent=m;err.hidden=false;card.classList.remove("shake");void card.offsetWidth;card.classList.add("shake");go.disabled=false;go.textContent="Enter"};
     const name=matchName(un.value);
     if(!un.value.trim())return fail("Enter your username.");
-    if(!name)return fail(`No member called "${un.value.trim()}". Use Boss, Ice, Ikkew or Ong.`);
+    if(!name)return fail(`No member called "${un.value.trim()}". Use Boss, Ice, Ikkew, Ong or Army.`);
     if(!pw.value)return fail("Enter your password.");
     go.disabled=true;go.textContent="Checking…";
     try{const r=await BD.signIn(name,pw.value);if(r.err)return fail(r.err);

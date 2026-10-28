@@ -1,6 +1,6 @@
 # Fore Man Gym
 
-Private gym-challenge web app for 4 friends: **Boss, Ice, Ikkew, Ong**. Owner: **Ice** (Natarit).
+Private gym-challenge web app for 5 friends: **Boss, Ice, Ikkew, Ong, Army**. Owner: **Ice** (Natarit).
 Hosted on Netlify + Cloudflare Workers (`wrangler.jsonc`; both auto-deploy from `main`, publish dir = repo root, no build step). Data on Supabase.
 
 ## Files
@@ -8,7 +8,7 @@ Hosted on Netlify + Cloudflare Workers (`wrangler.jsonc`; both auto-deploy from 
 - `shim.js` — data layer: wraps Supabase (table `docs`, storage bucket `proofs`, RPC login) behind a small `claude.use("db"|"assets"|"user")` API the app uses, plus `window.BD` auth helpers.
 - `config.js` — Supabase URL + publishable key, owner name, `ai` flag (false = no AI photo check).
 - `logo.png` (in-app, transparent), `icon-*.png` (home-screen icons with frame), `manifest.webmanifest`.
-- `supabase/` — SQL already run in the Supabase project (setup + login fix) and the optional AI edge function.
+- `supabase/` — SQL already run in the Supabase project (setup, login fix, 03 add Army) and the optional AI edge function.
 
 ## Rules the app enforces
 - Day runs 6am–6am (before 6am counts as the previous day). Week = Monday 6am–next Monday 6am. Goal: at least 3 weights + 4 cardio (7 sessions). No daily cap: any number of sessions per day, each counts.
@@ -21,7 +21,7 @@ Hosted on Netlify + Cloudflare Workers (`wrangler.jsonc`; both auto-deploy from 
 
 ## Style
 Matte black + cool aurora (cyan #7FD4E6, ice #A9C7D8, periwinkle #9DA4F2, teal #62C3B0). Fonts: Unbounded (display), Manrope (body), JetBrains Mono (numbers).
-Member colors: Boss ice, Ice cyan, Ikkew teal, Ong periwinkle. Keep 44pt tap targets and safe-area padding.
+Member colors: Boss ice, Ice cyan, Ikkew teal, Ong periwinkle, Army lilac #C3A6F0. Keep 44pt tap targets and safe-area padding.
 
 ## Workflow
 Owner wants every change live right away: after editing, commit and push to `main` (Netlify auto-deploys) as well as the working branch. No zip/manual uploads.
