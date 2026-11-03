@@ -316,6 +316,7 @@ main>*{min-width:0}
 .hint{font-size:13px;color:var(--sub);margin:0;line-height:1.55}
 .field{display:grid;gap:8px}
 .field input,.field textarea{font:inherit;font-size:17px;padding:14px;border-radius:12px;border:1px solid var(--edge-2);background:var(--bg);color:var(--text);width:100%;-webkit-appearance:none;appearance:none}
+.field input[type=date]{min-height:52px;text-align:left} .field input[type=date]::-webkit-date-and-time-value{text-align:left}
 .field textarea{resize:none}
 .fees{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 .box{background:var(--card);border:1px solid var(--edge);border-radius:var(--r);padding:16px;display:grid;gap:14px}
@@ -769,6 +770,8 @@ async function uploadPhoto(file,key){
   if(src.length>230000){const c2=document.createElement("canvas");c2.width=Math.round(canvas.width*.7);c2.height=Math.round(canvas.height*.7);c2.getContext("2d").drawImage(canvas,0,0,c2.width,c2.height);src=c2.toDataURL("image/jpeg",.6)}
   const pid=key+"_"+Date.now();await db.doc("photos/"+pid).set({src,user:me});photoCache[pid]=src;return {doc:pid};
 }
+/* A check-in logged on a later day than it was trained shows "for <day>". */
+const lateTag=c=>c.date&&c.ts&&c.date!==dkey(new Date(c.ts-DAY_START*36e5))?` · for ${parseKey(c.date).toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short"})}`:"";
 const doneToday=type=>{const k=dkey(gday());return checkins.some(c=>c.user===me&&c.date===k&&c.type===type&&proofState(c)!=="rejected")};
 const STATUS={ok:"Duty done",track:"On track",tight:"Tight",out:"Out of reach",excused:"Excused"};
 
@@ -1043,7 +1046,7 @@ function homeHTML(){
     <div class="card-h"><h2>Recent check-ins</h2>${checkins.length?`<button type="button" data-goto="proof">See all</button>`:""}</div>
     ${!loaded?`<p class="hint">Syncing with the crew…</p>`:recent.length?`<div class="recent">${recent.map(c=>`
       <button class="rrow" type="button" data-goto="proof" data-p="${c.user}"><span class="thumb">${photoHTML(c)}</span>
-        <span><span class="who">${esc(c.user)}</span><br><span class="meta">${fmtTime(c.ts)}${c.verify&&c.verify.minutes?` · ${Math.round(c.verify.minutes)} min${c.verify.calories!=null?` · ${Math.round(c.verify.calories)} kcal`:""}`:""}${c.muscles&&c.muscles.length?" · "+mList(c):""}</span></span>
+        <span><span class="who">${esc(c.user)}</span><br><span class="meta">${fmtTime(c.ts)}${lateTag(c)}${c.verify&&c.verify.minutes?` · ${Math.round(c.verify.minutes)} min${c.verify.calories!=null?` · ${Math.round(c.verify.calories)} kcal`:""}`:""}${c.muscles&&c.muscles.length?" · "+mList(c):""}</span></span>
         <span class="rstat ${proofState(c)}">${proofState(c)==="approved"?"✓":proofState(c)==="rejected"?"🧢":approvals(c)+"/"+APPROVALS_NEEDED}</span></button>`).join("")}</div>`
       :`<div class="empty" style="border:0;padding:12px 0;background:none"><b>No sessions yet</b>Tap Check in to train after your workout.</div>`}
   </section>
@@ -1218,7 +1221,7 @@ function feedHTML(list,emptyMsg){
   return `<div class="feed">${list.map(c=>{const r=c.reactions||{},st=proofState(c),ap=approvals(c),own=c.user===me,myV=r[me];
     const voters=Object.entries(r).filter(([u,v])=>u!==c.user&&(v==="approve"||v==="cap"));
     return `<article class="post st-${st}" data-p="${c.user}">
-      <div class="post-head">${mg(c.user)}<div class="meta"><b>${esc(c.user)}</b><div>${fmtTime(c.ts)}</div></div>
+      <div class="post-head">${mg(c.user)}<div class="meta"><b>${esc(c.user)}</b><div>${fmtTime(c.ts)}${lateTag(c)}</div></div>
         <span class="tag">${c.type==="weights"?"Weights":"Cardio"}</span></div>
       <div class="ph-wrap">${(c.photos&&c.photos.length>1)?`<div class="carousel" data-n="${c.photos.length}">${c.photos.map(p=>photoHTML({...c,photo:p})).join("")}</div><span class="ph-count mono">1/${c.photos.length}</span><div class="ph-dots">${c.photos.map((_,i)=>`<i class="${i?"":"on"}"></i>`).join("")}</div>`:photoHTML(c)}
         <span class="ribbon ${st}">${st==="approved"?(isAuto(c)?"✓ Auto-approved":"✓ Approved"):st==="rejected"?"🧢 Capped":`Pending · ${ap}/${APPROVALS_NEEDED}`}</span></div>
@@ -1450,6 +1453,8 @@ function openProfile(required){
 }
 function openCheckin(){
   if(!profiles[me]||!profiles[me].weight){openProfile(true);return}
+  const DAY_MAX=dkey(gday()),DAY_MIN=[dkey(addDays(gday(),-14)),dkey(seasonStart())].sort()[1];   // back-log up to 14 days
+  let day=DAY_MAX;
   let type=!doneToday("weights")||doneToday("cardio")?"weights":"cardio",file=null,note="",pv=null,files=[],pvs=[];
   const MAX_PHOTOS=5;
   let muscles=[];
@@ -1473,7 +1478,7 @@ function openCheckin(){
       const needM=false;
       const label=needM?"Pick what you trained":!file?"Photo required":!chk||chk.state==="retry"?"Check photo":chk.state==="checking"?"Checking…":chk.state==="fail"?"Retake photo":chk.state==="flag"?"Post for crew review":canPost?"Log "+(type==="weights"?"weights":"cardio"):chk.state==="manual"&&!manMin?"Enter your minutes":"Too short";
       bg.innerHTML=`<div class="sheet" role="dialog" aria-modal="true" aria-label="Check in"><div class="grab"></div>
-        <div class="sheet-top"><div><div class="eyebrow">${gday().toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long"})}</div><h2>Check in</h2></div><button class="x" type="button" aria-label="Close">×</button></div>
+        <div class="sheet-top"><div><div class="eyebrow">${parseKey(day).toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long"})}</div><h2>Check in</h2></div><button class="x" type="button" aria-label="Close">×</button></div>
         ${`
         <div class="types">${["weights","cardio"].map(t=>{const d=doneToday(t);return `<button type="button" class="tbtn" data-t="${t}" aria-pressed="${type===t}">
           <b>${t==="weights"?"Weights":"Cardio"}</b><small>${d?"Logged today · add another":t==="weights"?"Photo in the gym":`Result screen · ${CARDIO_MIN}+ min`}</small></button>`}).join("")}</div>
@@ -1487,6 +1492,7 @@ function openCheckin(){
         ${type==="weights"?`<div class="field"><span class="label">What did you train? · optional</span>
           <div class="mpick">${MUSCLES.map(([k,n])=>`<button type="button" data-m="${k}" aria-pressed="${muscles.includes(k)}">${n}</button>`).join("")}</div></div>`:""}
         ${verdict}
+        <div class="field"><label class="label" for="cDay">Date · forgot to log? Pick the day you trained</label><input id="cDay" type="date" min="${DAY_MIN}" max="${DAY_MAX}" value="${day}"></div>
         <div class="field"><label class="label" for="note">Note · optional</label>
           <textarea id="note" maxlength="140" rows="2" placeholder="${type==="cardio"?"Incline walk, 5 km run…":"Leg day, new PR…"}">${esc(note)}</textarea></div>
         <div class="err" id="serr" hidden></div>
@@ -1500,6 +1506,7 @@ function openCheckin(){
         const st=stash[nt]||{};type=nt;files=st.files||[];pvs=st.pvs||[];file=files[0]||null;pv=pvs[0]||null;chk=st.chk||null;manMin=st.manMin||"";
         draw();if(file&&!chk)runCheck()});
       bg.querySelector("#note").oninput=e=>note=e.target.value;
+      bg.querySelector("#cDay").onchange=e=>{const v=e.target.value;day=v>=DAY_MIN&&v<=DAY_MAX?v:DAY_MAX;draw()};
       bg.querySelectorAll("[data-m]").forEach(b=>b.onclick=()=>{const k=b.dataset.m;muscles=muscles.includes(k)?muscles.filter(x=>x!==k):[...muscles,k];draw()});
       const ph=bg.querySelector("#ph");if(ph)ph.onchange=e=>{const add=[...e.target.files].slice(0,MAX_PHOTOS-files.length);if(!add.length)return;
         const had=files.length;add.forEach(f=>{files.push(f);pvs.push(URL.createObjectURL(f))});file=files[0];pv=pvs[0];
@@ -1538,7 +1545,8 @@ function openCheckin(){
         if(type==="cardio"){if(chk.state==="manual"){const p=evalCardio(+manMin);if(p.length)throw new Error("Doesn't count: "+p.join(", ")+".");verify={by:"manual",minutes:+manMin}}
           else verify={by:"ai",minutes:chk.minutes,calories:chk.calories,activity:chk.activity,distance:chk.distance}}
         else verify={by:chk.state==="flag"?"flagged":chk.by==="manual"?"manual":"ai",reason:chk.reason||""};
-        const now=new Date(),date=dkey(gday()),id=`${me}_${date}_${type}_${now.getTime()}`;const photos=[];for(let i=0;i<files.length;i++){go.textContent=files.length>1?`Uploading ${i+1}/${files.length}…`:"Uploading…";photos.push(await uploadPhoto(files[i],id+"_"+i))}const photo=photos[0];
+        if(!(day>=DAY_MIN&&day<=DAY_MAX))throw new Error("Pick a date in the last 14 days.");
+        const now=new Date(),date=day,id=`${me}_${date}_${type}_${now.getTime()}`;const photos=[];for(let i=0;i<files.length;i++){go.textContent=files.length>1?`Uploading ${i+1}/${files.length}…`:"Uploading…";photos.push(await uploadPhoto(files[i],id+"_"+i))}const photo=photos[0];
         const doc={user:me,type,date,ts:now.getTime(),photo,photos,reactions:{},verify};if(type==="weights"&&muscles.length)doc.muscles=MUSCLES.map(m=>m[0]).filter(k=>muscles.includes(k));if(note.trim())doc.note=note.trim().slice(0,140);
         await db.doc("checkins/"+id).set(doc);pvs.forEach(u=>URL.revokeObjectURL(u));close0();showSuccess(doc);
       }catch(x){err.textContent=x&&x.code==="invalid_argument"?"You don't have permission to save. That isn't yours to change.":x&&x.code==="quota_exceeded"?"Club storage is full. Remove some old check-ins first.":(x&&x.message&&!x.code?x.message:"Upload failed. Check your connection and try again.");
